@@ -7,18 +7,11 @@ mod server;
 
  async fn main() {
 
-   let classes = tools::get_client_classes();
+    println!("Starting ENDA MCP Server");
 
-    println!(" ENDA Loyalty MCP Server");
-    println!("Starting server...");
-   
-    database::connect().await;
-    server::start().await;
+    let pool = database::connect().await;
 
-    for class in classes {
-      println!("Name: {}", class.name);
-      println!("Max Scpre: {}", class.max_score)
-    }
+    server::start(pool).await;
 
 }
 

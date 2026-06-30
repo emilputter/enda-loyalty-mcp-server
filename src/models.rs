@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, sqlx::FromRow)]
 pub struct ClientClasses{
     pub id: String,
     pub name: String,
