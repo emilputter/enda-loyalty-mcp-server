@@ -1,21 +1,24 @@
+mod database;
+mod models;
+mod tools;
+mod server;
 #[tokio::main]
+
 
  async fn main() {
 
-    println!("Starting ENDA MCP server");
+   let classes = tools::get_client_classes();
 
-    let response = reqwest:: get(
-       "https://api.hederacourt.site/api/v1/client-classes"
-    )
-    .await
-    .expect("Failed to send request");
+    println!(" ENDA Loyalty MCP Server");
+    println!("Starting server...");
+   
+    database::connect().await;
+    server::start().await;
 
-    println!("Status: {}", response.status());
-    let body = response
-    .json()
-    .await
-    .expect("Failed to read response body");
+    for class in classes {
+      println!("Name: {}", class.name);
+      println!("Max Scpre: {}", class.max_score)
+    }
 
-    println!("Body: {}", body);
 }
 
