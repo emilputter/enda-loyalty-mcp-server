@@ -319,6 +319,7 @@ version = "0.1.0"
 dependencies = [
  "reqwest",
  "rmcp",
+ "schemars",
  "serde",
  "sqlx",
  "tokio",

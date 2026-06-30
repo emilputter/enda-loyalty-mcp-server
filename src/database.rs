@@ -2,7 +2,7 @@ use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 use crate::models::ClientClasses;
 
 pub async fn connect() -> Pool<Postgres>{
-    println! ("Connection to PostgreSQL");
+    eprintln! ("Connection to PostgreSQL");
 
     let pool = PgPoolOptions::new()
     .max_connections(5)
@@ -10,7 +10,7 @@ pub async fn connect() -> Pool<Postgres>{
     .await
     .expect("Failed to connect to PostgreSQL");
 
-    println!("connected");
+    eprintln!("connected");
 
     pool
 }
