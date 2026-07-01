@@ -18,7 +18,29 @@ impl EndaServer {
 
 #[tool(description = "Returns the client classes")]
 async fn enda_list_client_classes(&self) -> String{
-    "Hello from ENDA MCP".to_string()
+    
+    match crate::database::get_client_classes(&self.pool).await{
+
+        Ok(classes) => {
+            let mut output = String::from("Client Classes\n\n");
+
+            for class in classes {
+
+                output.push_str(
+                    &format! (
+                        "{} ({} - {})\n",
+                        class.name,
+                        class.min_score.unwrap_or(0),
+                        class.max_score
+                    )
+                );
+            }
+            output
+        }
+        Err(error) => {
+            format!("Database Error: {}", error)
+        }
+    }
 }
 }
 

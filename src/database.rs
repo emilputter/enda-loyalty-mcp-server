@@ -25,7 +25,7 @@ pub async fn get_client_classes(
         id,
         name,
         min_score,
-        max_score,
+        max_score
         FROM client_classes
         "
     )
