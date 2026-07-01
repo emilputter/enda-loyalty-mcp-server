@@ -29,6 +29,9 @@ A Rust based MCP server that uses selected ENDA Loyalty backend endpoints as MCP
 ```bash
 cargo build
 cargo run
+
+Using the MCP inspector tool without running simply use:
+npx.cmd @modelcontextprotocol/inspector  
 ```
 
 ## How to test
@@ -49,4 +52,4 @@ service.rs -> Backend API communication
 
 - Current MCP tools retrieve data from the ENDA backend REST API
 - PostgreSQL module has been kept for potential future use
-- Mods.rs is not currently used and can be used future use
+- Mods.rs is not currently used and can be used for future use
