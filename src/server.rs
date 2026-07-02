@@ -1,17 +1,15 @@
 use rmcp::ServiceExt;
 use rmcp::{tool, tool_router, transport::io::stdio};
 use serde_json;
-use sqlx::{Pool, Postgres};
 
 //MCP server that shows ENDA backend endpoints as MCP tools
-pub struct EndaServer {
-    pub pool: Pool<Postgres>,
-}
+pub struct EndaServer;
+
 #[tool_router(server_handler)]
 impl EndaServer {
     // Creating a new MCP server instance
-    pub fn new(pool: Pool<Postgres>) -> Self {
-        Self { pool }
+    pub fn new() -> Self {
+        Self
     }
     // --------------------------------------------------
     // Retrieves the client classes from the ENDA backend
@@ -57,8 +55,8 @@ impl EndaServer {
 // ----------------------------------------------------------------------
 // Starts the MCP server and waits for STDIO connections from MCP clients
 // ----------------------------------------------------------------------
-pub async fn start(pool: Pool<Postgres>) {
-    let server = EndaServer::new(pool);
+pub async fn start() {
+    let server = EndaServer::new();
 
     let service = server.serve(stdio()).await.unwrap();
 
