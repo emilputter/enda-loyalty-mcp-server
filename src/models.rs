@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 // Struct representing the client class returned by the ENDA backend
-#[derive(Debug, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ClientClasses {
     pub id: String,
     pub name: String,

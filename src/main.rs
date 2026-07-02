@@ -1,16 +1,17 @@
-mod database;
 mod models;
+mod config;
 mod server;
 mod service;
+mod api_client;
+use dotenvy::dotenv;
 #[tokio::main]
 
 // Entry of the ENDA MCP server
 async fn main() {
+
+    dotenv().ok();
+
     eprintln!("Starting ENDA MCP Server");
 
-    // Makes the connection to the PostgreSQL database
-    let pool = database::connect().await;
-
-    // Starts the MCP server
-    server::start(pool).await;
+    server::start().await;
 }

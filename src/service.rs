@@ -1,31 +1,23 @@
 use crate::models::{ClientClasses, Region, Reward};
+use crate::api_client::ApiClient;
+
 
 // Retrieves client classes from the ENDA backend API
-pub async fn get_client_classes() -> Result<Vec<ClientClasses>, reqwest::Error> {
-    let classes = reqwest::get("https://api.hederacourt.site/api/v1/client-classes")
-        .await?
-        .json::<Vec<ClientClasses>>()
-        .await?;
-
-    Ok(classes)
+pub async fn get_client_classes(client: &ApiClient,) -> Result<Vec<ClientClasses>, reqwest::Error> {
+    
+    client.get_json::<Vec<ClientClasses>>("/client-classes").await
+   
 }
 
 // Retrieves rewards from the ENDA backend API
-pub async fn get_rewards() -> Result<Vec<Reward>, reqwest::Error> {
-    let rewards = reqwest::get("https://api.hederacourt.site/api/v1/rewards")
-        .await?
-        .json::<Vec<Reward>>()
-        .await?;
-
-    Ok(rewards)
+pub async fn get_rewards(client: &ApiClient,) -> Result<Vec<Reward>, reqwest::Error> {
+    
+    client.get_json::<Vec<Reward>>("/rewards").await
+ 
 }
 
 // Retrieves regions from the ENDA backend API
-pub async fn get_regions() -> Result<Vec<Region>, reqwest::Error> {
-    let regions = reqwest::get("https://api.hederacourt.site/api/v1/regions")
-        .await?
-        .json::<Vec<Region>>()
-        .await?;
-
-    Ok(regions)
+pub async fn get_regions(client: &ApiClient,) -> Result<Vec<Region>, reqwest::Error> {
+    
+    client.get_json::<Vec<Region>>("/regions").await
 }

@@ -42,6 +42,8 @@ npx.cmd @modelcontextprotocol/inspector
 
 ```bash
 src/
+api_clients.rs -> Shared HTTP client for communication with ENDA backend
+config.rs -> Loads config from environment variables
 database.rs -> PostgreSQL connection utilities
 main.rs -> Entry point for application
 models.rs -> Response models for API
@@ -53,3 +55,4 @@ service.rs -> Backend API communication
 - Current MCP tools retrieve data from the ENDA backend REST API
 - PostgreSQL module has been kept for potential future use
 - Mods.rs is not currently used and can be used for future use
+- Create a `.env` file om the project route (ENDA_API_BASE_URL=YourLink)
