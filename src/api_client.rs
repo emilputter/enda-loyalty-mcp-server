@@ -2,7 +2,9 @@ use serde::de::DeserializeOwned;
 use crate::config::Config;
 
 pub struct ApiClient {
+    // Shared HTTP client used for all backend requests
     client: reqwest::Client,
+    // Application config loaded from environment
     config: Config,
 }
 
@@ -14,7 +16,7 @@ impl ApiClient {
         }
     }
 
-
+// Sends a GET request to the backend, with deserialising the JSON response
 pub async fn get_json<T>(
     &self,
     path: &str,
