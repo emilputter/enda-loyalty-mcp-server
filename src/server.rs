@@ -1,22 +1,27 @@
 use rmcp::ServiceExt;
 use rmcp::{tool, tool_router, transport::io::stdio};
 use serde_json;
+use crate::api_client::ApiClient;
 
 //MCP server that shows ENDA backend endpoints as MCP tools
-pub struct EndaServer;
+pub struct EndaServer {
+    api_client: ApiClient,
+}
 
 #[tool_router(server_handler)]
 impl EndaServer {
     // Creating a new MCP server instance
     pub fn new() -> Self {
-        Self
+        Self{
+            api_client: ApiClient::new(),
+        }
     }
     // --------------------------------------------------
     // Retrieves the client classes from the ENDA backend
     // --------------------------------------------------
     #[tool(description = "Returns the client classes")]
     async fn enda_list_client_classes(&self) -> String {
-        match crate::service::get_client_classes().await {
+        match crate::service::get_client_classes(&self.api_client).await {
             Ok(classes) => serde_json::to_string_pretty(&classes).unwrap(),
 
             Err(error) => {
@@ -29,7 +34,7 @@ impl EndaServer {
     // -------------------------------------------
     #[tool(description = "Returns all rewards")]
     async fn enda_list_rewards(&self) -> String {
-        match crate::service::get_rewards().await {
+        match crate::service::get_rewards(&self.api_client).await {
             Ok(rewards) => serde_json::to_string_pretty(&rewards).unwrap(),
 
             Err(error) => {
@@ -42,7 +47,7 @@ impl EndaServer {
     // -------------------------------------------
     #[tool(description = "Returns all regions")]
     async fn enda_list_regions(&self) -> String {
-        match crate::service::get_regions().await {
+        match crate::service::get_regions(&self.api_client).await {
             Ok(regions) => serde_json::to_string_pretty(&regions).unwrap(),
 
             Err(error) => {
