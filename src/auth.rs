@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use crate::config::Config;
 use std::time::Instant;
+use std::net::TcpListener;
 use oauth2::{
     PkceCodeChallenge,
     PkceCodeVerifier,
@@ -31,10 +32,14 @@ pub struct AuthClient{
     openid_config: Option<OpenIdConfiguration>,
     pkce_challenge: Option<PkceCodeChallenge>,
     pkce_verifier: Option<PkceCodeVerifier>,
+    state: Option<CsrfToken>,
 
     access_token: Option<String>,
     refresh_token: Option<String>,
     expires_at: Option<Instant>,
+    authorization_code: Option<String>,
+
+    listener: Option<TcpListener>,
 }
 
 impl AuthClient {
@@ -48,6 +53,9 @@ impl AuthClient {
             access_token: None,
             refresh_token: None,
             expires_at: None,
+            authorization_code: None,
+            state: None,
+            listener: None,
         }
     }
     pub async fn discover(
@@ -80,6 +88,7 @@ impl AuthClient {
 
     self.pkce_challenge = Some(challenge);
     self.pkce_verifier = Some(verifier);
+    self.state = Some(CsrfToken::new_random());
 
 
 }
@@ -134,6 +143,39 @@ pub async fn login(
     self.discover().await?;
     self.generate_pkce();
     self.open_browser()?;
+
+    self.wait_for_callback().await?;
+    self.exchange_code().await?;
+
+    self.start_callback_listener()?;
+
+    Ok(())
+}
+
+pub async fn wait_for_callback(
+    &mut self,
+) -> Result<(), AuthError> {
+
+    Ok(())
+}
+
+pub async fn exchange_code(
+    &mut self,
+) -> Result<(), AuthError> {
+
+    Ok(())
+}
+pub fn start_callback_listener(
+    &mut self,
+) -> Result<(), AuthError> {
+
+    let listener = TcpListener::bind("127.0.0.1:0")
+    .map_err(|e| AuthError::BrowserError(e.to_string()))?;
+
+    println! ("Listening on {}",
+               listener.local_addr().unwrap());
+
+    self.listener = Some(listener);
 
     Ok(())
 }
