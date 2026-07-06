@@ -11,9 +11,9 @@ pub struct EndaServer {
 #[tool_router(server_handler)]
 impl EndaServer {
     // Creating a new MCP server instance
-    pub fn new() -> Self {
+    pub fn new(auth: crate::auth::AuthClient,) -> Self {
         Self{
-            api_client: ApiClient::new(),
+            api_client: ApiClient::new(auth),
         }
     }
     // --------------------------------------------------
@@ -60,8 +60,8 @@ impl EndaServer {
 // ----------------------------------------------------------------------
 // Starts the MCP server and waits for STDIO connections from MCP clients
 // ----------------------------------------------------------------------
-pub async fn start() {
-    let server = EndaServer::new();
+pub async fn start(auth: crate::auth::AuthClient,) {
+    let server = EndaServer::new(auth);
 
     let service = server.serve(stdio()).await.unwrap();
 

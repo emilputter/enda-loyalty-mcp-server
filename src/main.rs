@@ -17,7 +17,21 @@ async fn main() {
     let mut auth = auth::AuthClient::new();
 
    auth.login().await.unwrap();
+   let config = config::Config::load();
+    println!("{}", config.redirect_uri);
 
-    // server::start().await;
+    //server::start(auth).await;
+    let api_client = api_client::ApiClient::new(auth);
+
+match service::get_client_classes(&api_client).await {
+    Ok(classes) => {
+        println!("Success!");
+        println!("{:#?}", classes);
+    }
+
+    Err(error) => {
+        println!("Error: {}", error);
+    }
+}
 
 }

@@ -1,18 +1,23 @@
 use serde::de::DeserializeOwned;
 use crate::config::Config;
+use tokio::sync::Mutex;
+use std::sync::Arc;
 
 pub struct ApiClient {
     // Shared HTTP client used for all backend requests
     client: reqwest::Client,
     // Application config loaded from environment
     config: Config,
+    //Handles the OAuth authentication and token management
+     auth: Arc<Mutex<crate::auth::AuthClient>>,
 }
 
 impl ApiClient {
-    pub fn new() -> Self {
+    pub fn new(auth: crate::auth::AuthClient,) -> Self {
         Self {
             client: reqwest::Client::new(),
             config: Config::load(),
+            auth: Arc::new(Mutex::new(auth)),
         }
     }
 
@@ -24,8 +29,16 @@ pub async fn get_json<T>(
 where
 T:DeserializeOwned,
 {
+    let mut auth = self.auth.lock().await;
+
+    let token = auth
+    .get_valid_token()
+    .await
+    .expect("Authentication failed");
+    
     self.client
     .get(format!("{}{}", self.config.api_base_url, path))
+    .bearer_auth(token)
     .send()
     .await?
     .json::<T>()
