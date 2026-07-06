@@ -131,8 +131,8 @@ pub fn open_browser(
 
     let url = self.authorization_url()?;
 
-    println!("Opening URL:");
-    println!("{}", url);
+    eprintln!("Opening URL:");
+    eprintln!("{}", url);
 
     webbrowser::open(&url)
         .map_err(|e| AuthError::BrowserError(e.to_string()))?;
@@ -167,13 +167,13 @@ pub async fn wait_for_callback(
         .as_ref()
         .expect("Callback listener not started");
 
-    println!("Waiting for callback...");
+    eprintln!("Waiting for callback...");
 
     let (mut stream, address) = listener
         .accept()
         .map_err(|e| AuthError::BrowserError(e.to_string()))?;
 
-    println!("Connection received from {}", address);
+    eprintln!("Connection received from {}", address);
 
     let mut buffer = [0u8; 4096];
 
@@ -185,44 +185,36 @@ pub async fn wait_for_callback(
 
     let request_line = request.lines().next().unwrap_or("");
 
-    println!("Request line:");
-    println!("{}", request_line);
 
     let path = request_line
     .split_whitespace()
     .nth(1)
     .unwrap_or("");
 
-    println!("Path:");
-    println!("{}", path);
-
     let query = path
     .split('?')
     .nth(1)
     .unwrap_or("");
 
-    println!("Query:");
-    println!("{}", query);
 
     for parameter in query.split('&') {
 
     if let Some(code) = parameter.strip_prefix("code=") {
 
-        println!("Authorization code:");
-        println!("{}", code);
+        eprintln!("Authorization code:");
+        eprintln!("{}", code);
 
         self.authorization_code = Some(code.to_string());
-        println!("Authorization code stored successfully!");
+        eprintln!("Authorization code stored successfully!");
     }
 }
 
-    println!("{}", request);
 
     let response =
         "HTTP/1.1 200 OK\r\n\
          Content-Type: text/html\r\n\r\n\
-         <html><body><h1>Login successful!</h1>\
-         You may close this window.</body></html>";
+         <html><body><h1>Login successful</h1>\
+         You can close the window</body></html>";
 
     stream
         .write_all(response.as_bytes())
@@ -235,7 +227,7 @@ pub async fn wait_for_callback(
 pub async fn exchange_code(
     &mut self,
 ) -> Result<(), AuthError> {
-    println!("Exchanging authorization code for access token...");
+    eprintln!("Exchanging authorization code for access token...");
 
     let code = self
         .authorization_code
@@ -265,7 +257,7 @@ pub async fn exchange_code(
         .send()
         .await?;
 
-    println!("Status: {}", response.status());
+    eprintln!("Status: {}", response.status());
 
     let token = response
             .json::<TokenResponse>()
@@ -276,11 +268,11 @@ pub async fn exchange_code(
      
      self.expires_at = Some(
         Instant::now()
-            + std::time::Duration::from_secs(token.expires_in)
+           // + std::time::Duration::from_secs(token.expires_in)
      );
 
-     println!("Tokens stored successfully");
-     println!("Expires in {} seconds", token.expires_in);
+     eprintln!("Tokens stored successfully");
+     eprintln!("Expires in {} seconds", token.expires_in);
     Ok(())
 }
 pub fn start_callback_listener(
@@ -290,7 +282,7 @@ pub fn start_callback_listener(
     let listener = TcpListener::bind("127.0.0.1:8000")
     .map_err(|e| AuthError::BrowserError(e.to_string()))?;
 
-    println! ("Listening on {}",
+    eprintln! ("Listening on {}",
                listener.local_addr().unwrap());
 
     self.listener = Some(listener);
@@ -301,6 +293,16 @@ pub fn start_callback_listener(
 pub async fn get_valid_token(
     &mut self,
 ) -> Result<&str, AuthError> {
+    eprintln!("get_valid_token() called");
+    let expires_at = self
+        .expires_at
+        .expect("No expiry time stored");
+
+    if Instant::now() >= expires_at {
+
+        eprintln!("Access token has expired.");
+
+    }
 
     let token = self
     .access_token
