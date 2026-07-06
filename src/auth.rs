@@ -1,6 +1,6 @@
 use serde::Deserialize;
 use crate::config::Config;
-
+use std::time::Instant;
 use oauth2::{
     PkceCodeChallenge,
     PkceCodeVerifier,
@@ -12,13 +12,29 @@ use oauth2::{
     TokenUrl,
     basic::BasicClient,
 };
+#[derive(Debug)]
+pub enum AuthError {
+    OpenIdNotLoaded,
+    PkceNotGenerated,
+    BrowserError(String),
+    Network(reqwest::Error),
+}
 
+impl From<reqwest::Error> for AuthError {
+    fn from(error: reqwest::Error) -> Self{
+        AuthError::Network(error)
+    }
+}
 pub struct AuthClient{
     client: reqwest::Client,
     config: Config,
     openid_config: Option<OpenIdConfiguration>,
     pkce_challenge: Option<PkceCodeChallenge>,
     pkce_verifier: Option<PkceCodeVerifier>,
+
+    access_token: Option<String>,
+    refresh_token: Option<String>,
+    expires_at: Option<Instant>,
 }
 
 impl AuthClient {
@@ -29,11 +45,14 @@ impl AuthClient {
             openid_config: None,
             pkce_challenge: None,
             pkce_verifier: None,
+            access_token: None,
+            refresh_token: None,
+            expires_at: None,
         }
     }
     pub async fn discover(
         &mut self,
-    ) -> Result<(), reqwest::Error>{ 
+    ) -> Result<(), AuthError>{ 
 
         let url = format!(
             "{}/realms/{}/.well-known/openid-configuration",
@@ -67,17 +86,17 @@ impl AuthClient {
 
 pub fn authorization_url(
     &self,
-) -> Result<String, String> {
+) -> Result<String, AuthError> {
 
     let openid = self
     .openid_config
     .as_ref()
-    .ok_or("OpenID config not yet loaded")?;
+    .ok_or(AuthError::OpenIdNotLoaded)?;
 
     let challenge = self
     .pkce_challenge
     .as_ref()
-    .ok_or("PKCE challenge yet to be generated")?;
+    .ok_or(AuthError::PkceNotGenerated)?;
 
     let url = format!(
         "{}\
@@ -98,19 +117,19 @@ pub fn authorization_url(
 
 pub fn open_browser(
     &self,
-) -> Result<(), String> {
+) -> Result<(), AuthError> {
 
     let url = self.authorization_url()?;
 
     webbrowser::open(&url)
-    .map_err(|e| e.to_string())?;
+    .map_err(|e| AuthError::BrowserError(e.to_string()))?;
 
     Ok(())
 }
 
 pub async fn login(
     &mut self,
-) -> Result<(), Box<dyn std::error::Error>>{
+) -> Result<(), AuthError>{
 
     self.discover().await?;
     self.generate_pkce();
