@@ -16,11 +16,10 @@ impl ApiClient {
         }
     }
 
-// Sends a GET request to the backend, with deserialising the JSON response
+// Sends a GET request to the backend with deserialising the JSON response
 pub async fn get_json<T>(
     &self,
     path: &str,
-
 ) -> Result<T, reqwest::Error>
 where
 T:DeserializeOwned,

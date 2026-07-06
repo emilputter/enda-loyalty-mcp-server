@@ -3,6 +3,7 @@ mod config;
 mod server;
 mod service;
 mod api_client;
+mod auth;
 use dotenvy::dotenv;
 #[tokio::main]
 
@@ -13,5 +14,10 @@ async fn main() {
 
     eprintln!("Starting ENDA MCP Server");
 
-    server::start().await;
+    let mut auth = auth::AuthClient::new();
+
+   auth.login().await.unwrap();
+
+    // server::start().await;
+
 }
