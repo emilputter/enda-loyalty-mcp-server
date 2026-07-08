@@ -27,21 +27,24 @@ pub async fn get_json<T>(
     path: &str,
 ) -> Result<T, reqwest::Error>
 where
-T:DeserializeOwned,
+T: DeserializeOwned,
 {
-    let mut auth = self.auth.lock().await;
 
-    let token = auth
-    .get_valid_token()
-    .await
-    .expect("Authentication failed");
-    
+    let token = {
+    let mut auth = self.auth.lock().await;
+    auth
+        .get_valid_token()
+        .await
+        .expect("Authentication failed")
+        .to_string()
+};
+
     self.client
-    .get(format!("{}{}", self.config.api_base_url, path))
-    .bearer_auth(token)
-    .send()
-    .await?
-    .json::<T>()
-    .await
+        .get(format!("{}{}", self.config.api_base_url, path))
+        .bearer_auth(token)
+        .send()
+        .await?
+        .json::<T>()
+        .await
 }
 }

@@ -17,7 +17,6 @@ async fn main() {
     let mut auth = auth::AuthClient::new();
 
    auth.login().await.unwrap();
-   let config = config::Config::load();
 
     server::start(auth).await;
 

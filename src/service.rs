@@ -1,4 +1,4 @@
-use crate::models::{ClientClasses, Region, Reward};
+use crate::models::{ClientClasses, Region, Reward, CurrentUser};
 use crate::api_client::ApiClient;
 
 
@@ -20,4 +20,11 @@ pub async fn get_rewards(client: &ApiClient,) -> Result<Vec<Reward>, reqwest::Er
 pub async fn get_regions(client: &ApiClient,) -> Result<Vec<Region>, reqwest::Error> {
     
     client.get_json::<Vec<Region>>("/regions").await
+}
+
+pub async fn get_current_user(
+    client: &ApiClient,
+) -> Result<CurrentUser, reqwest::Error> {
+
+    client.get_json::<CurrentUser>("/auth/me").await
 }

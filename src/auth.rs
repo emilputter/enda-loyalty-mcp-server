@@ -6,13 +6,7 @@ use std::io::{Read, Write};
 use oauth2::{
     PkceCodeChallenge,
     PkceCodeVerifier,
-    AuthUrl,
-    ClientId,
     CsrfToken,
-    RedirectUrl,
-    Scope,
-    TokenUrl,
-    basic::BasicClient,
 };
 #[derive(Debug)]
 pub enum AuthError {
@@ -75,7 +69,6 @@ impl AuthClient {
         .await?
         .json::<OpenIdConfiguration>()
         .await?;
-
         self.openid_config = Some(configuration);
 
         Ok(())
@@ -90,7 +83,6 @@ impl AuthClient {
     self.pkce_challenge = Some(challenge);
     self.pkce_verifier = Some(verifier);
     self.state = Some(CsrfToken::new_random());
-
 
 }
 
@@ -185,7 +177,6 @@ pub async fn wait_for_callback(
 
     let request_line = request.lines().next().unwrap_or("");
 
-
     let path = request_line
     .split_whitespace()
     .nth(1)
@@ -195,7 +186,6 @@ pub async fn wait_for_callback(
     .split('?')
     .nth(1)
     .unwrap_or("");
-
 
     for parameter in query.split('&') {
 
@@ -208,8 +198,6 @@ pub async fn wait_for_callback(
         eprintln!("Authorization code stored successfully!");
     }
 }
-
-
     let response =
         "HTTP/1.1 200 OK\r\n\
          Content-Type: text/html\r\n\r\n\
@@ -220,7 +208,7 @@ pub async fn wait_for_callback(
         .write_all(response.as_bytes())
         .map_err(|e| AuthError::BrowserError(e.to_string()))?;
 
-
+        self.listener = None;
     Ok(())
 }
 
@@ -263,17 +251,60 @@ pub async fn exchange_code(
             .json::<TokenResponse>()
             .await?;
 
-     self.access_token = Some(token.access_token);
-     self.refresh_token = Some(token.refresh_token);
-     
-     self.expires_at = Some(
-        Instant::now()
-           // + std::time::Duration::from_secs(token.expires_in)
-     );
-
-     eprintln!("Tokens stored successfully");
-     eprintln!("Expires in {} seconds", token.expires_in);
+        self.store_tokens(token);
     Ok(())
+}
+
+fn store_tokens(
+    &mut self,
+    token: TokenResponse,
+) {
+    self.access_token = Some(token.access_token);
+
+    self.refresh_token = Some(token.refresh_token);
+
+    self.expires_at = Some(
+        Instant::now()
+     + std::time::Duration::from_secs(token.expires_in)
+    );
+
+    eprintln!("Tokens stored successfully");
+    eprintln!("Expires in {} seconds", token.expires_in);
+}
+
+pub async fn refresh_access_token(
+    &mut self,
+) -> Result<(), AuthError> {
+    
+    eprintln!("Refreshing access token");
+
+    let refresh_token = self
+    .refresh_token
+    .as_ref()
+    .expect("No refresh token");
+
+    let openid = self
+        .openid_config
+        .as_ref()
+        .expect("OpenID config missing");
+    let response = self.client
+        .post(&openid.token_endpoint)
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .body(format!(
+            "grant_type=refresh_token&client_id={}&refresh_token={}",
+            self.config.keycloak_id,
+            refresh_token,
+        ))
+        .send()
+        .await?;
+
+        eprintln!("Refresh status: {}", response.status());
+
+        let token = response
+            .json::<TokenResponse>()
+            .await?;
+            self.store_tokens(token);
+            Ok(())
 }
 pub fn start_callback_listener(
     &mut self,
@@ -293,29 +324,27 @@ pub fn start_callback_listener(
 pub async fn get_valid_token(
     &mut self,
 ) -> Result<&str, AuthError> {
-    eprintln!("get_valid_token() called");
     let expires_at = self
         .expires_at
         .expect("No expiry time stored");
 
     if Instant::now() >= expires_at {
+    eprintln!("Access token expired. Refreshing...");
 
-        eprintln!("Access token has expired.");
-
+    if self.refresh_access_token().await.is_err() {
+        eprintln!("Refresh failed. Starting login flow...");
+        self.login().await?;
     }
-
+}
     let token = self
-    .access_token
-    .as_deref()
-    .expect("No access token available");
+        .access_token
+        .as_deref()
+        .expect("No access token available");
 
     Ok(token)
 }
 }
     
-
-
-
 #[derive(Debug, Deserialize)]
 pub struct OpenIdConfiguration {
     pub authorization_endpoint: String,
