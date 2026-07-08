@@ -1,4 +1,4 @@
-use crate::models::{ClientClasses, Region, Reward};
+use crate::models::{ClientClasses, Permission, Region, Reward};
 use crate::api_client::ApiClient;
 
 
@@ -20,4 +20,10 @@ pub async fn get_rewards(client: &ApiClient,) -> Result<Vec<Reward>, reqwest::Er
 pub async fn get_regions(client: &ApiClient,) -> Result<Vec<Region>, reqwest::Error> {
     
     client.get_json::<Vec<Region>>("/regions").await
+}
+
+// Retrieves all permissions from the ENDA backend API
+pub async fn get_permissions(client: &ApiClient,) -> Result<Vec<Permission>, reqwest::Error> {
+    
+    client.get_json::<Vec<Permission>>("/permissions").await
 }

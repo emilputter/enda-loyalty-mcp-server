@@ -63,3 +63,14 @@ pub struct Region {
     pub id: String,
     pub name: String,
 }
+
+// Struct representing a permission in the ENDA loyalty program
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Permission {
+    pub code: String,
+    pub module: String,
+    pub action: String,
+    pub resource: String,
+    pub scope: String,
+    pub description: String,
+}

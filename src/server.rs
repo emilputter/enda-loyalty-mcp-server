@@ -55,6 +55,19 @@ impl EndaServer {
             }
         }
     }
+    // ------------------------------------------------
+    // Retrieves all permissions from the ENDA backend
+    // ------------------------------------------------
+    #[tool(description = "Returns all permissions")]
+    async fn enda_list_permissions(&self) -> String {
+        match crate::service::get_permissions(&self.api_client).await {
+            Ok(permissions) => serde_json::to_string_pretty(&permissions).unwrap(),
+
+            Err(error) => {
+                format!("Backend Error: {}", error)
+            }
+        }
+    }
 }
 
 // ----------------------------------------------------------------------
