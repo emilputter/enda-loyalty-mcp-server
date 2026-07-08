@@ -109,17 +109,11 @@ pub fn authorization_url(
     .ok_or(AuthError::PkceNotGenerated)?;
 
     let url = format!(
-    "{}\
-   ?client_id={}\
-   &redirect_uri={}\
-   &response_type=code\
-   &scope=openid\
-   &code_challenge={}\
-   &code_challenge_method=S256",
-   openid.authorization_endpoint,
-   self.config.keycloak_id,
-   self.config.redirect_uri,
-   challenge.as_str(),
+    "{}?client_id={}&redirect_uri={}&response_type=code&scope=openid&code_challenge={}&code_challenge_method=S256",
+    openid.authorization_endpoint,
+    self.config.keycloak_id,
+    self.config.redirect_uri,
+    challenge.as_str(),
 );
 
     Ok(url)
