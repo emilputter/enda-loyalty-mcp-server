@@ -1,7 +1,6 @@
+use crate::api_client::ApiClient;
 use rmcp::ServiceExt;
 use rmcp::{tool, tool_router, transport::io::stdio};
-use serde_json;
-use crate::api_client::ApiClient;
 
 //MCP server that shows ENDA backend endpoints as MCP tools
 pub struct EndaServer {
@@ -11,8 +10,8 @@ pub struct EndaServer {
 #[tool_router(server_handler)]
 impl EndaServer {
     // Creating a new MCP server instance
-    pub fn new(auth: crate::auth::AuthClient,) -> Self {
-        Self{
+    pub fn new(auth: crate::auth::AuthClient) -> Self {
+        Self {
             api_client: ApiClient::new(auth),
         }
     }
@@ -20,15 +19,15 @@ impl EndaServer {
     // Retrieves the client classes from the ENDA backend
     // --------------------------------------------------
     #[tool(description = "Returns the client classes")]
-async fn enda_list_client_classes(&self) -> String {
-    match crate::service::get_client_classes(&self.api_client).await {
-        Ok(classes) => serde_json::to_string_pretty(&classes).unwrap(),
+    async fn enda_list_client_classes(&self) -> String {
+        match crate::service::get_client_classes(&self.api_client).await {
+            Ok(classes) => serde_json::to_string_pretty(&classes).unwrap(),
 
-        Err(error) => {
-            format!("Backend Error: {}", error)
+            Err(error) => {
+                format!("Backend Error: {}", error)
+            }
         }
     }
-}
     // -------------------------------------------
     // Retrieves all rewards from the EDNA backend
     // -------------------------------------------
@@ -56,29 +55,27 @@ async fn enda_list_client_classes(&self) -> String {
         }
     }
     // --------------------------------------------------------
-// Returns the currently authenticated ENDA user
-// --------------------------------------------------------
-#[tool(description = "Returns the currently authenticated user")]
-async fn enda_current_user(&self) -> String {
-    match crate::service::get_current_user(&self.api_client).await {
-        Ok(user) => serde_json::to_string_pretty(&user).unwrap(),
+    // Returns the currently authenticated ENDA user
+    // --------------------------------------------------------
+    #[tool(description = "Returns the currently authenticated user")]
+    async fn enda_current_user(&self) -> String {
+        match crate::service::get_current_user(&self.api_client).await {
+            Ok(user) => serde_json::to_string_pretty(&user).unwrap(),
 
-        Err(error) => {
-            format!("Backend Error: {}", error)
+            Err(error) => {
+                format!("Backend Error: {}", error)
+            }
         }
     }
-}
 }
 
 // ----------------------------------------------------------------------
 // Starts the MCP server and waits for STDIO connections from MCP clients
 // ----------------------------------------------------------------------
-pub async fn start(auth: crate::auth::AuthClient,) {
+pub async fn start(auth: crate::auth::AuthClient) {
     let server = EndaServer::new(auth);
 
     let service = server.serve(stdio()).await.unwrap();
 
     service.waiting().await.unwrap();
 }
-
-

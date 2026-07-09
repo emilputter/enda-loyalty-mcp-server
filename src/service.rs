@@ -1,30 +1,23 @@
-use crate::models::{ClientClasses, Region, Reward, CurrentUser};
 use crate::api_client::ApiClient;
-
+use crate::models::{ClientClasses, CurrentUser, Region, Reward};
 
 // Retrieves client classes from the ENDA backend API
-pub async fn get_client_classes(client: &ApiClient,) -> Result<Vec<ClientClasses>, reqwest::Error> {
-    
-    client.get_json::<Vec<ClientClasses>>("/client-classes").await
-   
+pub async fn get_client_classes(client: &ApiClient) -> Result<Vec<ClientClasses>, reqwest::Error> {
+    client
+        .get_json::<Vec<ClientClasses>>("/client-classes")
+        .await
 }
 
 // Retrieves rewards from the ENDA backend API
-pub async fn get_rewards(client: &ApiClient,) -> Result<Vec<Reward>, reqwest::Error> {
-    
+pub async fn get_rewards(client: &ApiClient) -> Result<Vec<Reward>, reqwest::Error> {
     client.get_json::<Vec<Reward>>("/rewards").await
- 
 }
 
 // Retrieves regions from the ENDA backend API
-pub async fn get_regions(client: &ApiClient,) -> Result<Vec<Region>, reqwest::Error> {
-    
+pub async fn get_regions(client: &ApiClient) -> Result<Vec<Region>, reqwest::Error> {
     client.get_json::<Vec<Region>>("/regions").await
 }
 
-pub async fn get_current_user(
-    client: &ApiClient,
-) -> Result<CurrentUser, reqwest::Error> {
-
+pub async fn get_current_user(client: &ApiClient) -> Result<CurrentUser, reqwest::Error> {
     client.get_json::<CurrentUser>("/auth/me").await
 }

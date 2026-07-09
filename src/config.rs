@@ -10,22 +10,20 @@ pub struct Config {
 impl Config {
     // Loads the needed config from the environment.
     pub fn load() -> Self {
-        Self{
+        Self {
             api_base_url: std::env::var("ENDA_API_BASE_URL")
-            .expect("ENDA_API_BASE_URL must be set"),
+                .expect("ENDA_API_BASE_URL must be set"),
 
             keycloak_base: std::env::var("ENDA_KEYCLOAK_BASE")
-            .expect("ENDA_KEYCLOAK_BASE must be set"),
+                .expect("ENDA_KEYCLOAK_BASE must be set"),
 
             keycloak_realm: std::env::var("ENDA_KEYCLOAK_REALM")
-            .expect("ENDA_KEYCLOAK_REALM must be set"),
+                .expect("ENDA_KEYCLOAK_REALM must be set"),
 
-            keycloak_id: std::env::var("ENDA_KEYCLOAK_ID")
-            .expect("ENDA_KEYCLOAK_ID must be set"),
+            keycloak_id: std::env::var("ENDA_KEYCLOAK_ID").expect("ENDA_KEYCLOAK_ID must be set"),
 
             redirect_uri: std::env::var("ENDA_REDIRECT_URI")
-            .expect("ENDA_REDIRECT_URI must be set"),
+                .expect("ENDA_REDIRECT_URI must be set"),
         }
     }
-
 }
