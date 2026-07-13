@@ -19,7 +19,8 @@ pub struct Reward {
     pub id: String,
     pub code: String,
     pub name: String,
-    pub description: String,
+
+    pub description: Option<String>,
 
     #[serde(rename = "type")]
     pub reward_type: String,
@@ -30,7 +31,7 @@ pub struct Reward {
     pub manually_disabled: bool,
 
     #[serde(rename = "clientClass")]
-    pub client_class: Option<String>,
+    pub client_class: Option<ClientClasses>,
 
     pub category: String,
 

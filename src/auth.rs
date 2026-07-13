@@ -10,6 +10,13 @@ pub enum AuthError {
     PkceNotGenerated,
     BrowserError(String),
     Network(reqwest::Error),
+
+    ListenerNotStarted,
+    AuthorizationCodeMissing,
+    PkceVerifierMissing,
+    RefreshTokenMissing,
+    ExpiryMissing,
+    AccessTokenMissing,
 }
 
 // For errors that could occur during the authentication process
@@ -18,6 +25,44 @@ impl From<reqwest::Error> for AuthError {
         AuthError::Network(error)
     }
 }
+impl std::fmt::Display for AuthError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AuthError::OpenIdNotLoaded => {
+                write!(f, "OpenID configuration has not been loaded")
+            }
+            AuthError::PkceNotGenerated => {
+                write!(f, "PKCE challenge has not been generated")
+            }
+            AuthError::BrowserError(error) => {
+                write!(f, "Browser error: {}", error)
+            }
+            AuthError::Network(error) => {
+                write!(f, "Network error: {}", error)
+            }
+
+            AuthError::ListenerNotStarted => {
+                write!(f, "Callback listener has not been started")
+            }
+            AuthError::AuthorizationCodeMissing => {
+                write!(f, "Authorization code is missing")
+            }
+            AuthError::PkceVerifierMissing => {
+                write!(f, "PKCE verifier is missing")
+            }
+            AuthError::RefreshTokenMissing => {
+                write!(f, "Refresh token is missing")
+            }
+            AuthError::ExpiryMissing => {
+                write!(f, "Token expiry time is missing")
+            }
+            AuthError::AccessTokenMissing => {
+                write!(f, "Access token is missing")
+            }
+        }
+    }
+}
+impl std::error::Error for AuthError {}
 //Handles OAuth authentication with keycloak, including login, token management, and automatic token refresh
 pub struct AuthClient {
     client: reqwest::Client,
@@ -140,7 +185,7 @@ impl AuthClient {
         let listener = self
             .listener
             .as_ref()
-            .expect("Callback listener not started");
+            .ok_or(AuthError::ListenerNotStarted)?;
 
         eprintln!("Waiting for callback...");
 
@@ -192,11 +237,17 @@ impl AuthClient {
         let code = self
             .authorization_code
             .as_ref()
-            .expect("No authorization code");
+            .ok_or(AuthError::AuthorizationCodeMissing)?;
 
-        let verifier = self.pkce_verifier.as_ref().expect("No PKCE verifier");
+        let verifier = self
+            .pkce_verifier
+            .as_ref()
+            .ok_or(AuthError::PkceVerifierMissing)?;
 
-        let openid = self.openid_config.as_ref().expect("OpenID config missing");
+        let openid = self
+            .openid_config
+            .as_ref()
+            .ok_or(AuthError::OpenIdNotLoaded)?;
 
         let response = self
             .client
@@ -236,9 +287,15 @@ impl AuthClient {
     pub async fn refresh_access_token(&mut self) -> Result<(), AuthError> {
         eprintln!("Refreshing access token");
 
-        let refresh_token = self.refresh_token.as_ref().expect("No refresh token");
+        let refresh_token = self
+            .refresh_token
+            .as_ref()
+            .ok_or(AuthError::RefreshTokenMissing)?;
 
-        let openid = self.openid_config.as_ref().expect("OpenID config missing");
+        let openid = self
+            .openid_config
+            .as_ref()
+            .ok_or(AuthError::OpenIdNotLoaded)?;
         let response = self
             .client
             .post(&openid.token_endpoint)
@@ -261,7 +318,12 @@ impl AuthClient {
         let listener = TcpListener::bind("127.0.0.1:8000")
             .map_err(|e| AuthError::BrowserError(e.to_string()))?;
 
-        eprintln!("Listening on {}", listener.local_addr().unwrap());
+        eprintln!(
+            "Listening on {}",
+            listener
+                .local_addr()
+                .map_err(|e| AuthError::BrowserError(e.to_string()))?
+        );
 
         self.listener = Some(listener);
 
@@ -270,20 +332,21 @@ impl AuthClient {
 
     // Returns a valid access token, automatically being able to refresh it
     pub async fn get_valid_token(&mut self) -> Result<&str, AuthError> {
-        let expires_at = self.expires_at.expect("No expiry time stored");
+        let expires_at = self.expires_at.ok_or(AuthError::ExpiryMissing)?;
 
         if Instant::now() >= expires_at {
             eprintln!("Access token expired. Refreshing...");
 
-            if self.refresh_access_token().await.is_err() {
-                eprintln!("Refresh failed. Starting login flow...");
+            if let Err(error) = self.refresh_access_token().await {
+                eprintln!("Refresh failed: {}", error);
+                eprintln!("Starting login flow...");
                 self.login().await?;
             }
         }
         let token = self
             .access_token
             .as_deref()
-            .expect("No access token available");
+            .ok_or(AuthError::AccessTokenMissing)?;
 
         Ok(token)
     }

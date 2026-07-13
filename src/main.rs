@@ -8,14 +8,20 @@ use dotenvy::dotenv;
 #[tokio::main]
 
 // Entry of the ENDA MCP server
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
 
     eprintln!("Starting ENDA MCP Server");
 
     let mut auth = auth::AuthClient::new();
 
-    auth.login().await.unwrap();
+    auth.login().await?;
 
-    server::start(auth).await;
+    let config = config::Config::load();
+
+    println!("{}", config.redirect_uri);
+
+    server::start(auth).await?;
+
+    Ok(())
 }
