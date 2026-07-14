@@ -1,6 +1,9 @@
 mod config;
 mod services;
+mod models;
 
+
+use crate::models::Message;
 use dotenvy::dotenv;
 use tower_http::cors::CorsLayer;
 use axum::{
@@ -14,8 +17,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
 struct ChatRequest {
-    message: String,
+    messages: Vec<Message>,
 }
+
 
 
 #[derive(Debug, Serialize)]
@@ -28,14 +32,15 @@ async fn chat(
     Json(payload): Json<ChatRequest>
 ) -> Json<ChatResponse> {
 
-    println!("Received message: {}", payload.message);
+    println!("Received messages: {:?}", payload.messages);
 
 
     let response = services::openrouter::ask_openrouter(
-        payload.message
-    )
-    .await
-    .unwrap();
+    payload.messages,
+    Vec::new(),
+)
+.await
+.unwrap();
 
 
     Json(ChatResponse {
@@ -48,6 +53,14 @@ async fn chat(
 async fn main() {
 
     dotenv().ok();
+
+    println!(
+    "MCP PATH = {:?}",
+    std::env::var("MCP_SERVER_PATH")
+);
+
+    services::mcp_client::test_mcp_connection().await;
+    
     let app = Router::new()
         .route("/chat", post(chat))
         .layer(CorsLayer::permissive());

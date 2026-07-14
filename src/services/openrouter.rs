@@ -2,19 +2,14 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
 use crate::config::Config;
-
+use crate::models::Message;
+use crate::services::tools::ToolDefinition;
 
 #[derive(Debug, Serialize)]
 struct OpenRouterRequest {
     model: String,
     messages: Vec<Message>,
-}
-
-
-#[derive(Debug, Serialize)]
-struct Message {
-    role: String,
-    content: String,
+    tools: Vec<ToolDefinition>,
 }
 
 
@@ -37,7 +32,8 @@ struct MessageResponse {
 
 
 pub async fn ask_openrouter(
-    user_message: String
+    messages: Vec<Message>,
+    tools: Vec<ToolDefinition>
 ) -> Result<String, reqwest::Error> {
 
 
@@ -46,17 +42,14 @@ pub async fn ask_openrouter(
     let client = Client::new();
 
 
-    let request = OpenRouterRequest {
+let request = OpenRouterRequest {
 
-        model: "openrouter/free".to_string(),
+    model: "openrouter/free".to_string(),
 
-        messages: vec![
-            Message {
-                role: "user".to_string(),
-                content: user_message,
-            }
-        ],
-    };
+    messages,
+
+    tools,
+};
 
 
     let response = client
