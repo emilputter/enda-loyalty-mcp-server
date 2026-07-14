@@ -2,18 +2,24 @@ mod config;
 mod services;
 mod models;
 
-
+use services::openrouter::AIResponse;
 use crate::models::Message;
+use std::sync::Arc;
 use dotenvy::dotenv;
 use tower_http::cors::CorsLayer;
 use axum::{
     routing::post,
     Json,
     Router,
+    extract::State,
 };
 
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone)]
+struct AppState {
+    mcp: Arc<services::mcp_client::McpClient>,
+}
 
 #[derive(Debug, Deserialize)]
 struct ChatRequest {
@@ -29,23 +35,65 @@ struct ChatResponse {
 
 
 async fn chat(
+    State(state): State<AppState>,
     Json(payload): Json<ChatRequest>
 ) -> Json<ChatResponse> {
 
     println!("Received messages: {:?}", payload.messages);
 
 
+    let mcp_tools = state
+        .mcp
+        .list_tools()
+        .await;
+
+
+    let tools = services::tools::convert_mcp_tools(
+        mcp_tools.tools
+    );
+
+
     let response = services::openrouter::ask_openrouter(
     payload.messages,
-    Vec::new(),
+    tools,
 )
 .await
 .unwrap();
 
 
+match response {
+
+    AIResponse::Text(text) => {
+
+        Json(ChatResponse {
+            response: text,
+        })
+
+    }
+
+
+    AIResponse::ToolCall { name, arguments } => {
+
+    println!(
+        "AI requested tool: {} with arguments {}",
+        name,
+        arguments
+    );
+
+
+    let result = state
+        .mcp
+        .call_tool(name)
+        .await;
+
+
     Json(ChatResponse {
-        response,
+        response: result,
     })
+
+}
+
+}
 }
 
 
@@ -59,11 +107,17 @@ async fn main() {
     std::env::var("MCP_SERVER_PATH")
 );
 
-    services::mcp_client::test_mcp_connection().await;
-    
-    let app = Router::new()
-        .route("/chat", post(chat))
-        .layer(CorsLayer::permissive());
+    let mcp = services::mcp_client::McpClient::connect().await;
+
+let state = AppState {
+    mcp: Arc::new(mcp),
+};
+
+
+let app = Router::new()
+    .route("/chat", post(chat))
+    .with_state(state)
+    .layer(CorsLayer::permissive());
 
 
     let listener = tokio::net::TcpListener::bind(

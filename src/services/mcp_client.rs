@@ -3,59 +3,96 @@ use tokio::process::Command;
 use rmcp::{
     ServiceExt,
     transport::child_process::TokioChildProcess,
-    model::CallToolRequestParams,
+    model::{
+        CallToolRequestParams,
+        ListToolsResult,
+    },
 };
 
 
-pub async fn test_mcp_connection() {
-
-    println!("Starting MCP server...");
-
-
-    let path = std::env::var("MCP_SERVER_PATH")
-        .expect("MCP_SERVER_PATH must be set");
-
-
-    let command = Command::new(path);
+pub struct McpClient {
+    client: rmcp::service::RunningService<
+        rmcp::RoleClient,
+        ()
+    >,
+}
 
 
-    let transport = TokioChildProcess::new(command)
-        .expect("Failed to create MCP transport");
+impl McpClient {
 
 
-    println!("MCP transport created");
+    pub async fn connect() -> Self {
+
+        println!("Starting MCP server...");
 
 
-    let client = ()
-        .serve(transport)
-        .await
-        .expect("Failed to connect MCP client");
+        let path = std::env::var("MCP_SERVER_PATH")
+            .expect("MCP_SERVER_PATH must be set");
 
 
-    println!("Connected to MCP server");
+        let command = Command::new(path);
 
 
-    let tools = client
-        .list_tools(None)
-        .await
-        .expect("Failed to list tools");
+        let transport = TokioChildProcess::new(command)
+            .expect("Failed to create MCP transport");
 
 
-    println!("Available tools:");
-println!("{:#?}", tools);
+        println!("MCP transport created");
 
 
-let result = client
-    .call_tool(
-        CallToolRequestParams::new(
-            "enda_current_user"
+        let client = ()
+            .serve(transport)
+            .await
+            .expect("Failed to connect MCP client");
+
+
+        println!("Connected to MCP server");
+
+
+        Self {
+            client,
+        }
+
+    }
+
+
+    pub async fn list_tools(
+        &self
+    ) -> ListToolsResult {
+
+
+        self.client
+            .list_tools(None)
+            .await
+            .expect("Failed to list tools")
+
+    }
+
+
+ pub async fn call_tool(
+    &self,
+    name: String,
+) -> String {
+
+    
+    let result = self.client
+        .call_tool(
+            CallToolRequestParams::new(name)
         )
-    )
-    .await
-    .expect("Failed to call tool");
+        .await
+        .expect("Failed to call tool");
 
 
-println!("Tool result:");
-println!("{:#?}", result);
+    match result.content.first() {
+
+        Some(content) => {
+            format!("{:?}", content)
+        }
+
+        None => {
+            "No result".to_string()
+        }
+    }
+}
 
 }
