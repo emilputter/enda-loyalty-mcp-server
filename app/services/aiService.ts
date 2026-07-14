@@ -1,4 +1,9 @@
-export async function askAI(message: string): Promise<string> {
+import { MessageType } from "../types/message";
+
+
+export async function askAI(
+    messages: MessageType[]
+): Promise<string> {
 
     const response = await fetch(
         "http://localhost:8080/chat",
@@ -8,7 +13,7 @@ export async function askAI(message: string): Promise<string> {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                message: message,
+                messages: messages,
             }),
         }
     );

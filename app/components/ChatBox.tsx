@@ -39,7 +39,10 @@ export default function ChatBox() {
             newMessage
         ]);
 
-        const response = await askAI(input);
+        const response = await askAI([
+    ...messages,
+    newMessage
+]);
 
 
 const aiMessage: MessageType = {
