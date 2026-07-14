@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = config::Config::load();
 
-    println!("{}", config.redirect_uri);
+    eprintln!("{}", config.redirect_uri);
 
     server::start(auth).await?;
 
