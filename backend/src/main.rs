@@ -53,8 +53,10 @@ async fn chat(
     );
 
 
-    let response = services::openrouter::ask_openrouter(
-    payload.messages,
+    let messages = payload.messages.clone();
+
+let response = services::openrouter::ask_openrouter(
+    messages.clone(),
     tools,
 )
 .await
@@ -72,7 +74,11 @@ match response {
     }
 
 
-    AIResponse::ToolCall { name, arguments } => {
+    AIResponse::ToolCall {
+    name,
+    arguments,
+    assistant_message: _,
+} => {
 
     println!(
         "AI requested tool: {} with arguments {}",
@@ -80,15 +86,30 @@ match response {
         arguments
     );
 
-
     let result = state
         .mcp
-        .call_tool(name)
+        .call_tool(name.clone())
         .await;
 
+    let mut messages = payload.messages.clone();
+
+    messages.push(Message {
+        role: "assistant".to_string(),
+        content: format!(
+            "The requested tool '{}' returned the following result:\n\n{}",
+            name,
+            result
+        ),
+    });
+
+    let final_response = services::openrouter::ask_openrouter_text(
+        messages,
+    )
+    .await
+    .unwrap();
 
     Json(ChatResponse {
-        response: result,
+        response: final_response,
     })
 
 }

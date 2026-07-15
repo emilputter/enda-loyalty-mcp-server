@@ -12,6 +12,7 @@ pub enum AIResponse {
     ToolCall {
         name: String,
         arguments: String,
+        assistant_message: Message,
     }
 
 }
@@ -94,6 +95,14 @@ let data: OpenRouterResponse = serde_json::from_str(&text)?;
 
     let message = &data.choices[0].message;
 
+    let assistant_message = Message {
+    role: "assistant".to_string(),
+    content: message
+        .content
+        .clone()
+        .unwrap_or_default(),
+};
+
 
 if let Some(tool_calls) = &message.tool_calls {
 
@@ -101,11 +110,12 @@ if let Some(tool_calls) = &message.tool_calls {
 
 
     return Ok(
-        AIResponse::ToolCall {
-            name: tool.function.name.clone(),
-            arguments: tool.function.arguments.clone(),
-        }
-    );
+    AIResponse::ToolCall {
+        name: tool.function.name.clone(),
+        arguments: tool.function.arguments.clone(),
+        assistant_message,
+    }
+);
 }
 
 
@@ -117,4 +127,44 @@ Ok(
             .unwrap_or_default()
     )
 )
+}
+pub async fn ask_openrouter_text(
+    messages: Vec<Message>,
+) -> Result<String, Box<dyn std::error::Error>> {
+
+    let config = Config::load();
+
+    let client = Client::new();
+
+    let request = OpenRouterRequest {
+
+        model: "tencent/hy3:free".to_string(),
+
+        messages,
+
+        tools: vec![],
+    };
+
+    let response = client
+        .post("https://openrouter.ai/api/v1/chat/completions")
+        .bearer_auth(config.openrouter_key)
+        .json(&request)
+        .send()
+        .await?;
+
+    let data: OpenRouterResponse = response.json().await?;
+
+   let mut text = data.choices[0]
+    .message
+    .content
+    .clone()
+    .unwrap_or_default();
+
+if text.starts_with("<think:") {
+    if let Some(end) = text.find('>') {
+        text = text[end + 1..].trim().to_string();
+    }
+}
+
+Ok(text)
 }
