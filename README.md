@@ -83,9 +83,12 @@ cargo run
 
 Implemented tools:
 
-- enda_list_client_classes
-- enda_list_rewards
-- enda_list_regions
+- `enda_current_user`
+- `enda_list_client_classes`
+- `enda_list_rewards`
+- `enda_list_regions`
+
+---
 
 Run:
 
@@ -109,6 +112,7 @@ npx @modelcontextprotocol/inspector
 - Rust
 - Tokio
 - Reqwest
+- OAuth2
 - Serde
 
 ## MCP
