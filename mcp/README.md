@@ -14,12 +14,21 @@ A Rust-based MCP (Model Context Protocol) server that securely exposes selected 
 
 ---
 
-## Implemented Tools
+## Tools
 
-- `enda_current_user`
-- `enda_list_client_classes`
-- `enda_list_rewards`
-- `enda_list_regions`
+At startup, the server downloads the My Enda OpenAPI document and exposes one
+MCP tool for every documented HTTP operation. Tool names are stable, descriptive
+method/path names such as `enda_get_client_classes` and
+`enda_post_reward_requests_by_id_approve`.
+
+Each tool's input schema is generated from the API contract: path, query and
+header parameters are individually typed, while an endpoint's request payload
+is a typed `body` object with the API's required fields, enums, nested schemas,
+and validation rules. Responses are returned as formatted JSON so added backend
+response fields remain available without updating the MCP server.
+
+For multipart reward endpoints, provide `body.image` as a data URL such as
+`data:image/png;base64,iVBORw0...`; it is sent to the API as the binary image part.
 
 ---
 
@@ -91,6 +100,7 @@ Create a `.env` file in the project root using the following variables:
 
 ```env
 ENDA_API_BASE_URL=
+ENDA_OPENAPI_URL=https://api.hederacourt.site/v3/api-docs
 ENDA_KEYCLOAK_BASE=
 ENDA_KEYCLOAK_REALM=
 ENDA_KEYCLOAK_ID=

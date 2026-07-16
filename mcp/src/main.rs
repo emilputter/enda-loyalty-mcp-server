@@ -1,9 +1,7 @@
 mod api_client;
 mod auth;
 mod config;
-mod models;
 mod server;
-mod service;
 use dotenvy::dotenv;
 #[tokio::main]
 
