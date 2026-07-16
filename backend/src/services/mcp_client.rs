@@ -1,4 +1,5 @@
 use tokio::process::Command;
+use std::path::PathBuf;
 
 use rmcp::{
     ServiceExt,
@@ -29,8 +30,15 @@ impl McpClient {
         let path = std::env::var("MCP_SERVER_PATH")
             .expect("MCP_SERVER_PATH must be set");
 
+        let binary_path = PathBuf::from(&path);
+        let mcp_root = binary_path
+            .ancestors()
+            .nth(3)
+            .map(PathBuf::from)
+            .expect("MCP_SERVER_PATH must point inside mcp/target/<profile>/");
 
-        let command = Command::new(path);
+        let mut command = Command::new(&path);
+        command.current_dir(&mcp_root);
 
 
         let transport = TokioChildProcess::new(command)
