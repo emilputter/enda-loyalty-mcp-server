@@ -87,9 +87,12 @@ match response {
     );
 
     let result = state
-        .mcp
-        .call_tool(name.clone())
-        .await;
+    .mcp
+    .call_tool(
+        name.clone(),
+        arguments.clone(),
+    )
+    .await;
 
     let mut messages = payload.messages.clone();
 

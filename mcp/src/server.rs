@@ -1,6 +1,8 @@
 use crate::api_client::ApiClient;
 use rmcp::ServiceExt;
 use rmcp::{tool, tool_router, transport::io::stdio};
+use rmcp::handler::server::wrapper::Parameters;
+
 
 //MCP server that shows ENDA backend endpoints as MCP tools
 pub struct EndaServer {
@@ -71,7 +73,49 @@ impl EndaServer {
             }
         }
     }
+
+// --------------------------------------------------------
+// Returns all available permissions
+// --------------------------------------------------------
+#[tool(description = "Returns all available permissions")]
+async fn enda_list_permissions(&self) -> String {
+    match crate::service::get_permissions(&self.api_client).await {
+        Ok(permissions) => serde_json::to_string_pretty(&permissions)
+            .unwrap_or_else(|error| format!("Serialization Error: {}", error)),
+
+        Err(error) => {
+            format!("Backend Error: {}", error)
+        }
+    }
 }
+
+// --------------------------------------------------------
+// Creates a new role
+// --------------------------------------------------------
+#[tool(description = "Creates a new role")]
+async fn enda_create_role(
+    &self,
+    params: Parameters<crate::models::CreateRoleRequest>,
+) -> String {
+
+    let request = params.0;
+
+    match crate::service::create_role(
+        &self.api_client,
+        &request,
+    )
+    .await
+    {
+        Ok(role) => serde_json::to_string_pretty(&role)
+            .unwrap_or_else(|error| format!("Serialization Error: {}", error)),
+
+        Err(error) => {
+            format!("Backend Error: {}", error)
+        }
+    }
+}
+}// end of impl
+
 
 // ----------------------------------------------------------------------
 // Starts the MCP server and waits for STDIO connections from MCP clients
@@ -85,3 +129,5 @@ pub async fn start(auth: crate::auth::AuthClient) -> Result<(), Box<dyn std::err
 
     Ok(())
 }
+
+
