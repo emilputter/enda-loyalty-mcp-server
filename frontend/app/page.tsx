@@ -1,14 +1,9 @@
 import ChatBox from "./components/ChatBox";
 
-
-export default function Home(){
-
-    return (
-        <main className="min-h-screen flex items-center justify-center bg-gray-100">
-
-            <ChatBox />
-
-        </main>
-    );
-
+export default function Home() {
+  return (
+    <main className="app-shell">
+      <ChatBox />
+    </main>
+  );
 }
