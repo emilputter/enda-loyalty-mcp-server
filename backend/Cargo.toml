@@ -1,0 +1,19 @@
+[package]
+name = "enda-ai-backend"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+rmcp = { version = "2", features = ["client", "transport-io", "transport-child-process"] }
+axum = "0.8"
+
+serde = { version = "1", features = ["derive"] }
+
+serde_json = "1"
+
+reqwest = { version = "0.13", features = ["json"] }
+
+dotenvy = "0.15"
+
+tower-http = { version = "0.6", features = ["cors"] }

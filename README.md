@@ -1,20 +1,87 @@
-# ENDA MCP SERVER
+# ENDA Loyalty AI Platform
 
-A Rust-based MCP (Model Context Protocol) server that securely exposes selected ENDA Loyalty backend endpoints as MCP tools.
-
-## Features
-
-- Exposes ENDA backend endpoints as MCP tools
-- Retrieves data from the ENDA REST API
-- Supports testing with the MCP Inspector
-- OAuth 2.0 Authorization Code Flow with PKCE
-- Automatic access token refresh
-- Secure communication with protected ENDA backend endpoints
-- JSON serialization/deserialization using Serde
+A monorepo containing the ENDA AI platform. The project consists of a web frontend, an AI backend, and a Model Context Protocol (MCP) server that communicates with the ENDA Loyalty backend.
 
 ---
 
-## Implemented Tools
+## Architecture
+
+```
+                ┌──────────────────┐
+                │    Frontend      │
+                │   (Next.js)      │
+                └────────┬─────────┘
+                         │ HTTP
+                         ▼
+                ┌──────────────────┐
+                │   AI Backend     │
+                │     (Rust)       │
+                └────────┬─────────┘
+                         │ MCP
+                         ▼
+                ┌──────────────────┐
+                │    MCP Server    │
+                │     (Rust)       │
+                └────────┬─────────┘
+                         │ REST API
+                         ▼
+                 ENDA Loyalty Backend
+```
+
+---
+
+# Repository Structure
+
+```
+backend/     Rust AI backend
+frontend/    Next.js web application
+mcp/         Rust MCP server
+```
+
+---
+
+# Components
+
+## Frontend
+
+- Built with Next.js
+- Provides the user interface
+- Sends user prompts to the AI backend
+
+Run:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+## AI Backend
+
+- Built in Rust
+- Receives requests from the frontend
+- Communicates with the MCP server
+- Connects to AI providers (OpenRouter)
+
+Run:
+
+```bash
+cd backend
+cargo run
+```
+
+---
+
+## MCP Server
+
+- Built in Rust using RMCP
+- Exposes ENDA Loyalty functionality as MCP tools
+- Handles OAuth authentication
+- Communicates with the ENDA REST API
+
+Implemented tools:
 
 - `enda_current_user`
 - `enda_list_client_classes`
@@ -23,111 +90,73 @@ A Rust-based MCP (Model Context Protocol) server that securely exposes selected 
 
 ---
 
-## Technologies and Crates
-
-- Rust
-- RMCP
-- Tokio
-- Reqwest
-- OAuth2
-- Serde
-- dotenvy
-
----
-
-## Running the Project
-
-### Build the project
+Run:
 
 ```bash
-cargo build
-```
-
-### Run the server
-
-```bash
+cd mcp
 cargo run
 ```
 
-### Using the MCP Inspector
-
-Launch the MCP Inspector:
+To use the MCP Inspector:
 
 ```bash
 npx @modelcontextprotocol/inspector
 ```
 
-When creating a new connection:
+---
 
-- **Transport:** `STDIO`
-- **Command:** Browse to your compiled Rust executable.
+# Technologies
+
+## Backend
+
+- Rust
+- Tokio
+- Reqwest
+- OAuth2
+- Serde
+
+## MCP
+
+- Rust
+- RMCP
+- OAuth2
+- Reqwest
+- Serde
+
+## Frontend
+
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+
+---
+
+# Environment Variables
+
+Each project has its own configuration.
+
+Create the required `.env` files inside the appropriate project directories.
 
 Example:
 
-```text
-C:\Users\<username>\Documents\RustCodes\enda-loyalty-mcp-server\target\debug\enda-loyalty-mcp-server.exe
+```
+mcp/.env
+backend/.env
 ```
 
-Leave the **Arguments** field empty unless additional startup arguments are required.
+Refer to the `.env.example` files where available.
 
 ---
 
-## Testing
+# Current Status
 
-1. Build and run the MCP server.
-2. Launch the MCP Inspector.
-3. Connect to the server using the **STDIO** transport.
-4. Select your compiled Rust executable as the command.
-5. A browser window will automatically open for Keycloak authentication.
-6. Log in using your ENDA account.
-7. After successful authentication, a confirmation page will be displayed.
-8. Execute any of the available MCP tools from the Inspector.
+Current implementation includes:
 
----
-
-## Required Environment Variables
-
-Create a `.env` file in the project root using the following variables:
-
-```env
-ENDA_API_BASE_URL=
-ENDA_KEYCLOAK_BASE=
-ENDA_KEYCLOAK_REALM=
-ENDA_KEYCLOAK_ID=
-ENDA_REDIRECT_URI=
-```
-
----
-
-## Project Structure
-
-```text
-src/
-├── api_client.rs    # Authenticated HTTP client for ENDA backend requests
-├── auth.rs          # OAuth authentication and token management
-├── config.rs        # Loads configuration from environment variables
-├── main.rs          # Application entry point
-├── models.rs        # API response models
-├── server.rs        # MCP server and tool definitions
-├── service.rs       # Backend service layer
-```
-
----
-
-## Additional Notes
-
-- All backend requests are authenticated using OAuth 2.0 Bearer tokens.
-- Access tokens are automatically refreshed when they expire.
-- The server uses the Authorization Code Flow with PKCE for secure authentication.
-- Create a `.env` file before running the project.
-
-## Verifying the Server
-
-The server is considered to be working correctly when the following can be successfully demonstrated:
-
-- The MCP Inspector connects to the server over **STDIO**.
-- A browser automatically opens and prompts the user to authenticate with Keycloak.
-- After a successful login, the browser displays a confirmation page indicating the authentication was successful.
-- All available MCP tools execute successfully from the MCP Inspector.
-- The `enda_current_user` tool returns the currently authenticated user's information, role, and permissions.
-- Access tokens are automatically refreshed when they expire without requiring the user to log in again.
+- Repository restructured into a monorepo
+- Next.js frontend
+- Rust AI backend
+- Rust MCP server
+- OAuth authentication
+- ENDA Loyalty API integration
+- OpenRouter integration
