@@ -1,58 +1,133 @@
 # ENDA MCP SERVER
 
-A Rust based MCP server that uses selected ENDA Loyalty backend endpoints as MCP tools.
+A Rust-based MCP (Model Context Protocol) server that securely exposes selected ENDA Loyalty backend endpoints as MCP tools.
 
 ## Features
 
 - Exposes ENDA backend endpoints as MCP tools
 - Retrieves data from the ENDA REST API
 - Supports testing with the MCP Inspector
+- OAuth 2.0 Authorization Code Flow with PKCE
+- Automatic access token refresh
+- Secure communication with protected ENDA backend endpoints
 - JSON serialization/deserialization using Serde
+
+---
 
 ## Implemented Tools
 
-- enda_list_client_classes
-- enda_list_rewards
-- enda_list_regions
+- `enda_current_user`
+- `enda_list_client_classes`
+- `enda_list_rewards`
+- `enda_list_regions`
 
-## Technologies and crates
+---
+
+## Technologies and Crates
 
 - Rust
 - RMCP
 - Tokio
 - Reqwest
+- OAuth2
 - Serde
-- SQLx
-- PostgreSQL
+- dotenvy
+
+---
 
 ## Running the Project
+
+### Build the project
+
 ```bash
 cargo build
-cargo run
-
-Using the MCP inspector tool without running simply use:
-npx.cmd @modelcontextprotocol/inspector  
 ```
 
-## How to test
-
-- The project can be tested using the MCP Inspector by connecting to the server over **STDIO**
-
-## Project structure
+### Run the server
 
 ```bash
-src/
-api_clients.rs -> Shared HTTP client for communication with ENDA backend
-config.rs -> Loads config from environment variables
-database.rs -> PostgreSQL connection utilities
-main.rs -> Entry point for application
-models.rs -> Response models for API
-server.rs -> MCP tool and server implementation
-service.rs -> Backend API communication
+cargo run
 ```
+
+### Using the MCP Inspector
+
+Launch the MCP Inspector:
+
+```bash
+npx @modelcontextprotocol/inspector
+```
+
+When creating a new connection:
+
+- **Transport:** `STDIO`
+- **Command:** Browse to your compiled Rust executable.
+
+Example:
+
+```text
+C:\Users\<username>\Documents\RustCodes\enda-loyalty-mcp-server\target\debug\enda-loyalty-mcp-server.exe
+```
+
+Leave the **Arguments** field empty unless additional startup arguments are required.
+
+---
+
+## Testing
+
+1. Build and run the MCP server.
+2. Launch the MCP Inspector.
+3. Connect to the server using the **STDIO** transport.
+4. Select your compiled Rust executable as the command.
+5. A browser window will automatically open for Keycloak authentication.
+6. Log in using your ENDA account.
+7. After successful authentication, a confirmation page will be displayed.
+8. Execute any of the available MCP tools from the Inspector.
+
+---
+
+## Required Environment Variables
+
+Create a `.env` file in the project root using the following variables:
+
+```env
+ENDA_API_BASE_URL=
+ENDA_KEYCLOAK_BASE=
+ENDA_KEYCLOAK_REALM=
+ENDA_KEYCLOAK_ID=
+ENDA_REDIRECT_URI=
+```
+
+---
+
+## Project Structure
+
+```text
+src/
+├── api_client.rs    # Authenticated HTTP client for ENDA backend requests
+├── auth.rs          # OAuth authentication and token management
+├── config.rs        # Loads configuration from environment variables
+├── main.rs          # Application entry point
+├── models.rs        # API response models
+├── server.rs        # MCP server and tool definitions
+├── service.rs       # Backend service layer
+```
+
+---
+
 ## Additional Notes
 
-- Current MCP tools retrieve data from the ENDA backend REST API
-- PostgreSQL module has been kept for potential future use
-- Mods.rs is not currently used and can be used for future use
-- Create a `.env` file om the project route (ENDA_API_BASE_URL=YourLink)
+- All backend requests are authenticated using OAuth 2.0 Bearer tokens.
+- Access tokens are automatically refreshed when they expire.
+- The server uses the Authorization Code Flow with PKCE for secure authentication.
+- Create a `.env` file before running the project.
+
+## Verifying the Server
+
+The server is considered to be working correctly when the following can be successfully demonstrated:
+
+- The MCP Inspector connects to the server over **STDIO**.
+- A browser automatically opens and prompts the user to authenticate with Keycloak.
+- After a successful login, the browser displays a confirmation page indicating the authentication was successful.
+- All available MCP tools execute successfully from the MCP Inspector.
+- The `enda_current_user` tool returns the currently authenticated user's information, role, and permissions.
+- Access tokens are automatically refreshed when they expire without requiring the user to log in again.
