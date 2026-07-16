@@ -7,6 +7,7 @@ use rmcp::{
     model::{
         CallToolRequestParams,
         ListToolsResult,
+        ContentBlock,
     },
 };
 
@@ -92,14 +93,10 @@ impl McpClient {
 
 
     match result.content.first() {
-
-        Some(content) => {
-            format!("{:?}", content)
+        Some(ContentBlock::Text(text_content)) => {
+            text_content.text.clone()
         }
-
-        None => {
-            "No result".to_string()
-        }
+        _ => "No result".to_string()
     }
 }
 

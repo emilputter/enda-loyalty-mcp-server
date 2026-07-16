@@ -95,11 +95,7 @@ match response {
 
     messages.push(Message {
         role: "assistant".to_string(),
-        content: format!(
-            "The requested tool '{}' returned the following result:\n\n{}",
-            name,
-            result
-        ),
+        content: result,
     });
 
     let final_response = services::openrouter::ask_openrouter_text(
