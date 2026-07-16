@@ -2,7 +2,7 @@ use serde::Serialize;
 use rmcp::model::Tool;
 
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ToolDefinition {
 
     pub r#type: String,
@@ -12,7 +12,7 @@ pub struct ToolDefinition {
 }
 
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct FunctionDefinition {
 
     pub name: String,

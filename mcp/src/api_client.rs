@@ -10,6 +10,7 @@ pub enum ApiError {
     Request(reqwest::Error),
     Authentication(crate::auth::AuthError),
     InvalidInput(String),
+    Response { status: reqwest::StatusCode, body: String },
 }
 
 impl From<reqwest::Error> for ApiError {
@@ -30,6 +31,7 @@ impl std::fmt::Display for ApiError {
             Self::Request(error) => write!(f, "Backend request error: {error}"),
             Self::Authentication(error) => write!(f, "Authentication error: {error}"),
             Self::InvalidInput(error) => write!(f, "Invalid tool input: {error}"),
+            Self::Response { status, body } => write!(f, "ENDA API returned {status}: {body}"),
         }
     }
 }
@@ -104,8 +106,12 @@ impl ApiClient {
             };
         }
 
-        let response = request.send().await?.error_for_status()?;
+        let response = request.send().await?;
+        let status = response.status();
         let text = response.text().await?;
+        if !status.is_success() {
+            return Err(ApiError::Response { status, body: text });
+        }
         match serde_json::from_str::<Value>(&text) {
             Ok(json) => serde_json::to_string_pretty(&json).map_err(|error| {
                 ApiError::InvalidInput(format!("could not format JSON response: {error}"))

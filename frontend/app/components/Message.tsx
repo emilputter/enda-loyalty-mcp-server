@@ -58,6 +58,33 @@ export default function Message({ message }: Props) {
           {message.content}
         </ReactMarkdown>
       </div>
+
+      {message.role === "assistant" && message.toolActivity && message.toolActivity.length > 0 && (
+        <details className="mt-3 rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm">
+          <summary className="cursor-pointer font-medium text-gray-700">
+            Tools used ({message.toolActivity.length})
+          </summary>
+          <div className="mt-2 space-y-2">
+            {message.toolActivity.map((tool, index) => (
+              <details key={`${tool.name}-${index}`} className="rounded bg-gray-50 px-2 py-1.5">
+                <summary className="cursor-pointer font-mono text-xs text-gray-800">
+                  {tool.name}
+                </summary>
+                <div className="mt-2 space-y-2 text-xs">
+                  <div>
+                    <p className="font-medium">Input</p>
+                    <pre className="overflow-x-auto rounded bg-gray-200 p-2">{JSON.stringify(tool.arguments, null, 2)}</pre>
+                  </div>
+                  <div>
+                    <p className="font-medium">Result</p>
+                    <pre className="max-h-48 overflow-auto rounded bg-gray-200 p-2">{tool.result}</pre>
+                  </div>
+                </div>
+              </details>
+            ))}
+          </div>
+        </details>
+      )}
     </div>
   );
 }

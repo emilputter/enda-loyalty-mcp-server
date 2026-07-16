@@ -1,9 +1,13 @@
-import { MessageType } from "../types/message";
+import { MessageType, ToolActivity } from "../types/message";
 
+export interface ChatResult {
+    response: string;
+    tool_activity: ToolActivity[];
+}
 
 export async function askAI(
     messages: MessageType[]
-): Promise<string> {
+): Promise<ChatResult> {
 
     const response = await fetch(
         "http://localhost:8080/chat",
@@ -33,5 +37,5 @@ export async function askAI(
 
     const data = await response.json();
 
-    return data.response;
+    return data;
 }

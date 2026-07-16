@@ -33,16 +33,25 @@ export default function ChatBox() {
 
     setLoading(true);
 
-    const response = await askAI([...messages, newMessage]);
+    try {
+      const response = await askAI([...messages, newMessage]);
+      const aiMessage: MessageType = {
+        id: messages.length + 2,
+        role: "assistant",
+        content: response.response,
+        toolActivity: response.tool_activity,
+      };
 
-    const aiMessage: MessageType = {
-      id: messages.length + 2,
-      role: "assistant",
-      content: response,
-    };
-
-    setMessages((prev) => [...prev, aiMessage]);
-    setLoading(false);
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch {
+      setMessages((prev) => [...prev, {
+        id: prev.length + 1,
+        role: "assistant",
+        content: "Sorry, the request could not be completed. Please try again.",
+      }]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -54,7 +63,7 @@ export default function ChatBox() {
 
         {loading && (
           <div className="bg-gray-100 text-black p-3 rounded-lg italic text-gray-500">
-            AI is thinking...
+            Working with available tools...
           </div>
         )}
       </div>

@@ -2,19 +2,15 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
 use crate::config::Config;
-use crate::models::Message;
+use crate::models::{Message, ToolCall};
 use crate::services::tools::ToolDefinition;
 
 pub enum AIResponse {
-
     Text(String),
-
-    ToolCall {
-        name: String,
-        arguments: String,
+    ToolCalls {
         assistant_message: Message,
-    }
-
+        calls: Vec<ToolCall>,
+    },
 }
 
 #[derive(Debug, Serialize)]
@@ -24,18 +20,15 @@ struct OpenRouterRequest {
     tools: Vec<ToolDefinition>,
 }
 
-
 #[derive(Debug, Deserialize)]
 struct OpenRouterResponse {
     choices: Vec<Choice>,
 }
 
-
 #[derive(Debug, Deserialize)]
 struct Choice {
     message: MessageResponse,
 }
-
 
 #[derive(Debug, Deserialize)]
 struct MessageResponse {
@@ -43,128 +36,45 @@ struct MessageResponse {
     tool_calls: Option<Vec<ToolCall>>,
 }
 
-
-#[derive(Debug, Deserialize)]
-struct ToolCall {
-    function: FunctionCall,
-}
-
-
-#[derive(Debug, Deserialize)]
-struct FunctionCall {
-    name: String,
-    arguments: String,
-}
-
-
+/// Requests the next model response. Tool calls are returned intact so the
+/// caller can execute every call and pass their results back to the model.
 pub async fn ask_openrouter(
     messages: Vec<Message>,
-    tools: Vec<ToolDefinition>
+    tools: Vec<ToolDefinition>,
 ) -> Result<AIResponse, Box<dyn std::error::Error>> {
-
-
     let config = Config::load();
-
-    let client = Client::new();
-
-
-let request = OpenRouterRequest {
-
-    model: "tencent/hy3:free".to_string(),
-
-    messages,
-
-    tools,
-};
-
-
-    let response = client
-        .post("https://openrouter.ai/api/v1/chat/completions")
-        .bearer_auth(config.openrouter_key)
-        .json(&request)
-        .send()
-        .await?;
-
-
-   let text = response.text().await?;
-
-println!("{}", text);
-
-let data: OpenRouterResponse = serde_json::from_str(&text)?;
-
-
-    let message = &data.choices[0].message;
-
-    let assistant_message = Message {
-    role: "assistant".to_string(),
-    content: message
-        .content
-        .clone()
-        .unwrap_or_default(),
-};
-
-
-if let Some(tool_calls) = &message.tool_calls {
-
-    let tool = &tool_calls[0];
-
-
-    return Ok(
-    AIResponse::ToolCall {
-        name: tool.function.name.clone(),
-        arguments: tool.function.arguments.clone(),
-        assistant_message,
-    }
-);
-}
-
-
-Ok(
-    AIResponse::Text(
-        message
-            .content
-            .clone()
-            .unwrap_or_default()
-    )
-)
-}
-pub async fn ask_openrouter_text(
-    messages: Vec<Message>,
-) -> Result<String, Box<dyn std::error::Error>> {
-
-    let config = Config::load();
-
-    let client = Client::new();
-
     let request = OpenRouterRequest {
-
         model: "tencent/hy3:free".to_string(),
-
         messages,
-
-        tools: vec![],
+        tools,
     };
 
-    let response = client
+    let response = Client::new()
         .post("https://openrouter.ai/api/v1/chat/completions")
         .bearer_auth(config.openrouter_key)
         .json(&request)
         .send()
-        .await?;
-
+        .await?
+        .error_for_status()?;
     let data: OpenRouterResponse = response.json().await?;
+    let message = data
+        .choices
+        .into_iter()
+        .next()
+        .ok_or("OpenRouter returned no choices")?
+        .message;
+    let assistant_message = Message {
+        role: "assistant".to_string(),
+        content: message.content.clone().unwrap_or_default(),
+        tool_calls: message.tool_calls.clone(),
+        tool_call_id: None,
+    };
 
-   let mut text = data.choices[0]
-    .message
-    .content
-    .clone()
-    .unwrap_or_default();
-
-if text.starts_with("<think:") {
-    if let Some(end) = text.find('>') {
-        text = text[end + 1..].trim().to_string();
+    match message.tool_calls {
+        Some(calls) if !calls.is_empty() => Ok(AIResponse::ToolCalls {
+            assistant_message,
+            calls,
+        }),
+        _ => Ok(AIResponse::Text(message.content.unwrap_or_default())),
     }
-}
-
-Ok(text)
 }
