@@ -9,12 +9,14 @@ import { askAI } from "../services/aiService";
 export default function ChatBox() {
 const bottomRef = useRef<HTMLDivElement>(null);
     const [messages, setMessages] = useState<MessageType[]>([
-        {
-            id: 1,
-            role: "assistant",
-            content: "Hello, I am the ENDA AI assistant."
-        }
-    ]);
+{
+    id: 1,
+    role: "assistant",
+    content: ` Welcome to Enda Assist
+
+I'm connected to the **ENDA Loyalty Platform** and can help you manage the system with several tools.`
+}
+]);
 
 
     const [input, setInput] = useState("");
@@ -49,7 +51,8 @@ const bottomRef = useRef<HTMLDivElement>(null);
 const aiMessage: MessageType = {
     id: messages.length + 2,
     role: "assistant",
-    content: response
+    content: response.response,
+    toolActivity: response.tool_activity,
 };
 
 

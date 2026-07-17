@@ -3,7 +3,14 @@ import { MessageType } from "../types/message";
 
 export async function askAI(
     messages: MessageType[]
-): Promise<string> {
+): Promise<{
+    response: string;
+    tool_activity: {
+        name: string;
+        arguments: string;
+        result: string;
+    }[];
+}> {
 
     const response = await fetch(
         "http://localhost:8080/chat",
@@ -33,5 +40,5 @@ export async function askAI(
 
     const data = await response.json();
 
-    return data.response;
+return data;
 }
