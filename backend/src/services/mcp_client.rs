@@ -1,5 +1,5 @@
 use tokio::process::Command;
-
+use serde_json::{Map, Value};
 use rmcp::{
     ServiceExt,
     transport::child_process::TokioChildProcess,
@@ -72,16 +72,20 @@ impl McpClient {
  pub async fn call_tool(
     &self,
     name: String,
+    arguments: String,
 ) -> String {
 
-    
+    let arguments: Map<String, Value> =
+        serde_json::from_str(&arguments)
+            .expect("Invalid tool arguments");
+
     let result = self.client
         .call_tool(
             CallToolRequestParams::new(name)
+                .with_arguments(arguments)
         )
         .await
         .expect("Failed to call tool");
-
 
     match result.content.first() {
 

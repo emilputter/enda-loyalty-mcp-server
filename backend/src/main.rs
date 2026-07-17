@@ -26,11 +26,17 @@ struct ChatRequest {
     messages: Vec<Message>,
 }
 
-
+#[derive(Debug, Serialize)]
+struct ToolActivity {
+    name: String,
+    arguments: String,
+    result: String,
+}
 
 #[derive(Debug, Serialize)]
 struct ChatResponse {
     response: String,
+    tool_activity: Vec<ToolActivity>,
 }
 
 
@@ -68,8 +74,9 @@ match response {
     AIResponse::Text(text) => {
 
         Json(ChatResponse {
-            response: text,
-        })
+    response: text,
+    tool_activity: Vec::new(),
+})
 
     }
 
@@ -87,9 +94,18 @@ match response {
     );
 
     let result = state
-        .mcp
-        .call_tool(name.clone())
-        .await;
+    .mcp
+    .call_tool(
+        name.clone(),
+        arguments.clone(),
+    )
+    .await;
+
+    let tool_activity = ToolActivity {
+    name: name.clone(),
+    arguments: arguments.clone(),
+    result: result.clone(),
+};
 
     let mut messages = payload.messages.clone();
 
@@ -109,8 +125,9 @@ match response {
     .unwrap();
 
     Json(ChatResponse {
-        response: final_response,
-    })
+    response: final_response,
+    tool_activity: vec![tool_activity],
+})
 
 }
 

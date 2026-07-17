@@ -75,4 +75,33 @@ impl ApiClient {
             .json::<T>()
             .await?)
     }
+
+    // Sends a POST request to the backend with a JSON body and
+// deserialises the JSON response.
+pub async fn post_json<T, B>(
+    &self,
+    path: &str,
+    body: &B,
+) -> Result<T, ApiError>
+where
+    T: DeserializeOwned,
+    B: serde::Serialize,
+{
+    let token = {
+        let mut auth = self.auth.lock().await;
+
+        auth.get_valid_token().await?.to_string()
+    };
+
+    Ok(
+        self.client
+            .post(format!("{}{}", self.config.api_base_url, path))
+            .bearer_auth(token)
+            .json(body)
+            .send()
+            .await?
+            .json::<T>()
+            .await?,
+    )
+}
 }

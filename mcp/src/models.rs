@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use schemars::JsonSchema;
 
 // Struct representing the client class returned by the ENDA backend
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -65,6 +66,8 @@ pub struct Region {
     pub name: String,
 }
 
+
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CurrentUser {
     pub sub: String,
@@ -117,4 +120,19 @@ pub struct Permission {
     pub resource: String,
     pub scope: String,
     pub description: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, JsonSchema)]
+pub struct CreateRoleRequest {
+    pub code: String,
+
+    pub description: String,
+
+    #[serde(rename = "isActive")]
+    pub is_active: bool,
+
+    pub name: String,
+
+    #[serde(rename = "permissionCodes")]
+    pub permission_codes: Vec<String>,
 }
